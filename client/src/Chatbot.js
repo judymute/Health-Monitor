@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import axios from 'axios';
 import './Chatbot.css';
 
-const Chatbot = ({ userData }) => {
+const Chatbot = () => {
   const [messages, setMessages] = useState([
     {
       id: 1,
@@ -13,36 +12,7 @@ const Chatbot = ({ userData }) => {
   ]);
   
   const [inputText, setInputText] = useState('');
-  const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef(null);
-  const [userContext, setUserContext] = useState(null);
-
-  useEffect(() => {
-    // If userData is passed from parent, use it
-    if (userData) {
-      setUserContext(userData);
-    } else {
-      // Otherwise fetch from API
-      const fetchUserContext = async () => {
-        try {
-          const token = localStorage.getItem('token');
-          const response = await axios.get('/api/user-context', {
-            headers: { Authorization: `Bearer ${token}` }
-          });
-          setUserContext(response.data);
-        } catch (err) {
-          console.error('Error fetching user context:', err);
-          // Add a bot message about the error
-          addMessage({
-            text: "I'm having trouble accessing your health information. My responses may be limited.",
-            sender: 'bot'
-          });
-        }
-      };
-
-      fetchUserContext();
-    }
-  }, [userData]);
 
   // Scroll to bottom whenever messages change
   useEffect(() => {
@@ -63,7 +33,7 @@ const Chatbot = ({ userData }) => {
     setMessages(prevMessages => [...prevMessages, newMessage]);
   };
 
-  const handleSendMessage = async (e) => {
+  const handleSendMessage = (e) => {
     e.preventDefault();
     
     if (!inputText.trim()) return;
@@ -77,40 +47,30 @@ const Chatbot = ({ userData }) => {
     // Clear input
     setInputText('');
     
-    // Show bot is typing
-    setIsTyping(true);
-    
-    try {
-      // Send message to backend for AI processing
-      const token = localStorage.getItem('token');
-      const response = await axios.post('/api/chatbot', {
-        message: inputText,
-        userContext: userContext
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
+    // Simulate bot response
+    setTimeout(() => {
+      // Simple responses based on keywords
+      let botResponse = "I'm sorry, I don't understand that query. Could you try rephrasing?";
+      
+      const lowercaseInput = inputText.toLowerCase();
+      
+      if (lowercaseInput.includes('diet') || lowercaseInput.includes('eat') || lowercaseInput.includes('food')) {
+        botResponse = "Based on your health profile, I recommend eating more leafy greens, lean proteins, and whole grains. Try to limit processed foods and added sugars.";
+      } else if (lowercaseInput.includes('sleep') || lowercaseInput.includes('tired')) {
+        botResponse = "For better sleep quality, aim for 7-8 hours per night. Establish a regular sleep schedule and avoid screens before bedtime.";
+      } else if (lowercaseInput.includes('exercise') || lowercaseInput.includes('workout')) {
+        botResponse = "I recommend 150 minutes of moderate exercise per week. Mix cardio activities with strength training for optimal results.";
+      } else if (lowercaseInput.includes('stress') || lowercaseInput.includes('anxiety')) {
+        botResponse = "Regular meditation, deep breathing exercises, and physical activity can help manage stress levels. Consider taking short breaks throughout your day.";
+      } else if (lowercaseInput.includes('hello') || lowercaseInput.includes('hi')) {
+        botResponse = "Hello! How can I assist with your health today?";
+      }
+      
+      addMessage({
+        text: botResponse,
+        sender: 'bot'
       });
-      
-      // Add bot response after a short delay to seem more natural
-      setTimeout(() => {
-        addMessage({
-          text: response.data.message,
-          sender: 'bot'
-        });
-        setIsTyping(false);
-      }, 1000);
-      
-    } catch (err) {
-      console.error('Error in chatbot communication:', err);
-      
-      // Add error message
-      setTimeout(() => {
-        addMessage({
-          text: "I'm sorry, I'm having trouble responding right now. Please try again later.",
-          sender: 'bot'
-        });
-        setIsTyping(false);
-      }, 1000);
-    }
+    }, 1000);
   };
 
   const handleInputChange = (e) => {
@@ -121,9 +81,9 @@ const Chatbot = ({ userData }) => {
   const quickQuestions = [
     "What should I eat today?",
     "How can I improve my sleep?",
-    "Should I be concerned about my symptoms?",
-    "What exercises are recommended for me?",
-    "How can I reduce stress?"
+    "What exercises are recommended?",
+    "How can I reduce stress?",
+    "What's my health status?"
   ];
 
   const handleQuickQuestion = (question) => {
@@ -162,16 +122,6 @@ const Chatbot = ({ userData }) => {
           </div>
         ))}
         
-        {isTyping && (
-          <div className="message bot-message typing">
-            <div className="typing-indicator">
-              <span></span>
-              <span></span>
-              <span></span>
-            </div>
-          </div>
-        )}
-        
         <div ref={messagesEndRef} />
       </div>
       
@@ -181,11 +131,10 @@ const Chatbot = ({ userData }) => {
           value={inputText}
           onChange={handleInputChange}
           placeholder="Type your health question here..."
-          disabled={isTyping}
         />
         <button 
           type="submit" 
-          disabled={!inputText.trim() || isTyping}
+          disabled={!inputText.trim()}
         >
           Send
         </button>
