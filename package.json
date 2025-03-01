@@ -20,5 +20,10 @@
   "bugs": {
     "url": "https://github.com/judymute/Health-Monitor/issues"
   },
-  "homepage": "https://github.com/judymute/Health-Monitor#readme"
+  "homepage": "https://github.com/judymute/Health-Monitor#readme",
+  "dependencies": {
+    "axios": "^1.8.1",
+    "react-router-dom": "^7.2.0",
+    "styled-components": "^6.1.15"
+  }
 }
